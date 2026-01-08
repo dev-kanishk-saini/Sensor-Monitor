@@ -7,6 +7,11 @@ const socket = window.socket;
 // ================= WAIT FOR DOM =================
 
 window.addEventListener("DOMContentLoaded", () => {
+   
+   const initCommand = "FD FC FB FA 02 00 61 00 04 03 02 01"; // example hex
+  socket.emit("sendCommand", initCommand);
+  console.log("✅ Init command sent to sensor");
+
 
     // ✅ REGISTER DATALABELS PLUGIN GLOBALLY
   if (typeof ChartDataLabels !== 'undefined') {
@@ -16,9 +21,7 @@ window.addEventListener("DOMContentLoaded", () => {
     console.warn("⚠️ ChartDataLabels plugin not found. Labels won't display.");
   }
 
-  const initCommand = "FD FC FB FA 02 00 61 00 04 03 02 01"; // example hex
-  socket.emit("sendCommand", initCommand);
-  console.log("✅ Init command sent to sensor");
+ 
 
   const reset = document.getElementById("resetZoomBtn");
    const motionChartTypeSelect = document.getElementById("motionChartType");
@@ -26,10 +29,12 @@ window.addEventListener("DOMContentLoaded", () => {
    const switchmode = document.getElementById("mode");
    const resetmaxmotion = document.getElementById("resetmaxvaluemotion");
    const resetmaxstatic = document.getElementById("resetmaxvaluestatic");
-   const selectgatetype = document.getElementById("selectgatetype");
+
      const selectgatenumber = document.getElementById("selectgateno");
-     const selectgatevalue = document.getElementById("selectgatevalue");
+     const selectmotiongatevalue = document.getElementById("selectmotiongatevalue");
+     const selectstaticgatevalue = document.getElementById("selectstaticgatevalue");
      const setSensitivity = document.getElementById("setsensitivity");
+     const autoconfig = document.getElementById("autoconfig");
    
   //  const startconfig = document.getElementById("startconfig");
   //  const stopconfig = document.getElementById("stopconfig");
@@ -503,14 +508,21 @@ for (let i = 0; i < ms.length; i++) {
 
   setSensitivity.addEventListener("click",()=>{
             const data = {
-              gate : selectgatetype.value,
               number : selectgatenumber.value,
-              value : selectgatevalue.value
+              motiongatevalue : selectmotiongatevalue.value,
+              staticgatevalue : selectstaticgatevalue.value
             }
             console.log(data);
         socket.emit("setsensitivity",data);
 
           });
+
+
+    autoconfig.addEventListener("click",()=>{
+      const time  = 10000;
+      socket.emit("autoconfig",time);
+       console.log("Auto Config Started !");
+    });
   // startconfig.addEventListener("click",()=>{
   //   socket.emit("task : control",{ action : "start"});
   //   console.log("▶ Starting Configuration Mode");

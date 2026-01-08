@@ -4,6 +4,10 @@ import { Server } from "socket.io";
 import { SerialPort } from "serialport";
 import { ReadlineParser } from "@serialport/parser-readline";
 import { time } from "console";
+import autoconfig from "./autoconfig.js";
+import setSensitivity from "./setsensitivity.js";
+import set_sensitivity_cmd from "./setsensitivity-cmd.js";
+import { createPayloadBuffer } from "./check-absence.js";
 
 
 // ------------------ EXPRESS SERVER ------------------
@@ -18,10 +22,15 @@ server.listen(3000, () => {
 });
 
 // ------------------ SERIAL PORT ------------------
-const port = new SerialPort({
-  path: "COM20",
+export const port = new SerialPort({
+  path: "COM12",
   baudRate: 256000
 });
+
+ const onpayload = createPayloadBuffer(
+         () => MotionSensitivity,
+         () => StaticSensitivity
+       )
 
 let lastEmit = 0;
 
@@ -57,26 +66,34 @@ const calculateResult = () => {
   })
        
       io.emit("configuredataset",{motiongatecount,staticgatecount,dataArray});
-      console.log("motiongatecount", motiongatecount); 
-      console.log("staticgatecount", staticgatecount);
 
+      const newsensitivity_data = autoconfig(dataArray,MotionSensitivity,StaticSensitivity);
+      setSensitivity({newsensitivity_data, MotionSensitivity,StaticSensitivity});
 
-};
-
-const sensitivity_values = (data) => {
-
-let SET_SENSITIVITY_CMD = "FD FC FB FA 14 00 64 00 00 00 03 00 00 00 01 00 28 00 00 00 02 00 28 00 00 00 04 03 02 01";     
-console.log(SET_SENSITIVITY_CMD[30]);
-console.log(SET_SENSITIVITY_CMD[2]);
-
-    //  switch(data.gate){
-    //   case "static" : 
-    //  }
      
+   //   console.log("Auto config");
+    //  console.log("motiongatecount", motiongatecount); 
+   //   console.log("staticgatecount", staticgatecount);
+    //   console.log("NewMotionSensitivity", newMotionSensitivity);
+     //  console.log("NewMotionSensitivity", newStaticSensitivity);
+
+
 };
 
+// const sensitivity_values = (data) => {
 
-function hexStringToBuffer(hexString) {
+// let SET_SENSITIVITY_CMD = "FD FC FB FA 14 00 64 00 00 00 03 00 00 00 01 00 28 00 00 00 02 00 28 00 00 00 04 03 02 01";     
+// console.log(SET_SENSITIVITY_CMD[30]);
+// console.log(SET_SENSITIVITY_CMD[2]);
+
+//     //  switch(data.gate){
+//     //   case "static" : 
+//     //  }
+     
+// };
+
+
+export function hexStringToBuffer(hexString) {
   return Buffer.from(
     hexString
       .trim()
@@ -86,23 +103,25 @@ function hexStringToBuffer(hexString) {
 }
 
 // ------------------ COMMANDS ------------------
-const CONFIG_CMD_ENB = hexStringToBuffer(
+ export const CONFIG_CMD_ENB = hexStringToBuffer(
   "FD FC FB FA 04 00 FF 00 01 00 04 03 02 01"
 );
 
-const ENGINEERING_CMD = hexStringToBuffer(
+export const ENGINEERING_CMD = hexStringToBuffer(
   "FD FC FB FA 02 00 62 00 04 03 02 01"
 );
 
-const ENGINEERING_CMD_OFF = hexStringToBuffer(
+export const ENGINEERING_CMD_OFF = hexStringToBuffer(
   "FD FC FB FA 02 00 63 00 04 03 02 01"
 );
 
-const CONFIG_CMD_DIS = hexStringToBuffer(
+export const CONFIG_CMD_DIS = hexStringToBuffer(
   "FD FC FB FA 02 00 FE 00 04 03 02 01"
 );
 
-
+export const AUTO_CONFIG_CMD = hexStringToBuffer(
+  "FD FC FB FA 04 00 0B 00 0A 00 04 03 02 01"
+)
 
 
 
@@ -227,12 +246,21 @@ port.on("data", (data) => {
         Output: parseInt(hexFrame[38], 16)
       };
 
+    //  console.log(MotionSensitivity,StaticSensitivity);
+      // checking for presence and absence.
+
+      
+      onpayload(payload);
+   
+      
+      
   
+     
 
 
       
 
-     //console.log(payload.Output);
+    // console.log(payload.Output);
        if(config ){
        
         const dataset = {
@@ -425,46 +453,37 @@ io.on("connection", (socket) => {
       config = false;
           console.log(config);
 
-          calculateResult();
+            calculateResult();
+           
           socket.emit("dataArray", dataArray);
 
     }
      
   });
 
+ 
   socket.on("setsensitivity",(data)=>{
-    console.log(data);
-    sensitivity_values();
+            const data_object = {
+              data : data,
+              ms : MotionSensitivity,
+              ss : StaticSensitivity
+            };
 
-    
-//    if (port.isOpen) {
-//       port.write(CONFIG_CMD_ENB, () => {
-//       console.log(
-//         "📤 Sent (Config Mode ON):",
-//         CONFIG_CMD_ENB.toString("hex").toUpperCase()
-//       );
-//     });
+            set_sensitivity_cmd(data_object);
+    ``    
+  });
 
-//      port.write(SET_SENSITIVITY_CMD, () => {
-//       console.log(
-//         `Saved ${data.gate} gate : ${data.number} value = ${data.value}`,
-//         SET_SENSITIVITY_CMD.toString("hex").toUpperCase()
-//       );
-//     });
 
-     
+  // socket.on("autoconfig",(time) =>{
+  //  // console.log("Auto config");
+  //   console.log(time);
+  //    config = true;
+  //  setTimeout(()=>{
+  //      config = false
+  //  },time);
+  //    calculateResult();
 
-//  port.write(CONFIG_CMD_DIS, () => {
-//       console.log(
-//         "📤 Sent (Config Mode OFF):",
-//         CONFIG_CMD_DIS.toString("hex").toUpperCase()
-//       );
-//     });
-
-//     } else {
-//       console.warn("⚠ Serial port not open. Command not sent.");
-//     }
-  })
+  // });
 
 
   socket.on("disconnect", () => {
