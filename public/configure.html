@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Monitor Dash</title>
+      <!-- Tailwind-like Utility Styling -->
+  <link rel="stylesheet" href="styles2.css" />
+
+  <!-- Socket + Chart -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+  <script src="script2.js" defer></script>
+</head>
+
+<body class="app-bg">
+
+  <!-- TOP NAV -->
+  <header class="navbar">
+    
+    <div style="display: flex;">
+<h1 class="navbar-title" >Radar Sensor Monitor</h1>
+  <a href="index.html">
+  <h4 >Home</h4>
+  </a>
+    </div>
+  </header>
+
+  <!-- MAIN LAYOUT -->
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+     
+      <div class="sidebar-item active">
+        <h3>Mode</h3>
+       
+        <div style="margin-top: 10px; display: flex; gap: 10px;">
+        <button id="startconfig" class="button">Start Config</button>
+        <button id="stopconfig" class="button">Stop Config</button>
+  
+
+        
+        </div>
+ 
+      </div>
+      <div class="sidebar-item">
+        <h3>Motion Gate Threshold cross.</h3>
+        <label class="input-label">
+                Gate 1
+        </label>
+        <input id="motiongate1" class="input" >
+                <label class="input-label">
+                Gate 2
+        </label>
+        <input id="motiongate2" class="input" >
+                <label class="input-label">
+                Gate 3
+        </label>
+        <input id="motiongate3" class="input" >
+                <label class="input-label">
+                Gate 4
+        </label>
+        <input id="motiongate4" class="input" >
+                <label class="input-label">
+                Gate 5
+        </label>
+        <input id="motiongate5" class="input" >
+                <label class="input-label">
+                Gate 6
+        </label>
+        <input id="motiongate6" class="input" >
+                <label class="input-label">
+                Gate 7
+        </label>
+        <input id="motiongate7" class="input" >
+                <label class="input-label">
+                Gate 8
+        </label>
+        <input id="motiongate8" class="input" >
+       
+           <h3>Static Gate Threshold cross.</h3>
+            <label class="input-label">
+                Gate 1
+        </label>
+        <input id="staticgate1" class="input">
+        <label class="input-label">
+                Gate 2
+        </label>
+        <input id="staticgate2" class="input">
+        <label class="input-label">
+                Gate 3
+        </label>
+        <input id="staticgate3" class="input">
+        <label class="input-label">
+                Gate 4
+        </label>
+        <input id="staticgate4" class="input">
+        <label class="input-label">
+                Gate 5
+        </label>
+        <input id="staticgate5" class="input">
+        <label class="input-label">
+                Gate 6
+        </label>
+        <input id="staticgate6" class="input">
+        <label class="input-label">
+                Gate 7
+        </label>
+        <input id="staticgate7" class="input">
+        <label class="input-label">
+                Gate 8
+        </label>
+        <input id="staticgate8" class="input">
+        
+        
+  <br>  <br>
+        <!-- <button id="restart" class="button">Restart</button> -->
+          <br>  <br>
+        </div>
+      <div class="sidebar-item">
+        <h3>Motion Peak Value</h3>
+         <label class="input-label">
+                Gate 1
+        </label>
+        <input id="mpeakvalue1" class="input">
+           <label class="input-label">
+                Gate 2
+        </label>
+        <input id="mpeakvalue2" class="input">
+           <label class="input-label">
+                Gate 3
+        </label>
+        <input id="mpeakvalue3" class="input">
+           <label class="input-label">
+                Gate 4
+        </label>
+        <input id="mpeakvalue4" class="input">
+        <label class="input-label">
+                Gate 5
+        </label>
+        <input id="mpeakvalue5" class="input">
+           <label class="input-label">
+                Gate 6
+        </label>
+        <input id="mpeakvalue6" class="input">
+           <label class="input-label">
+                Gate 7
+        </label>
+        <input id="mpeakvalue7" class="input">
+           <label class="input-label">
+                Gate 8
+        </label>
+        <input id="mpeakvalue8" class="input">
+
+         <h3>Static Peak Value</h3>
+         <label class="input-label">
+                Gate 1
+        </label>
+        <input id="speakvalue1" class="input">
+           <label class="input-label">
+                Gate 2
+        </label>
+        <input id="speakvalue2" class="input">
+           <label class="input-label">
+                Gate 3
+        </label>
+        <input id="speakvalue3" class="input">
+           <label class="input-label">
+                Gate 4
+        </label>
+        <input id="speakvalue4" class="input">
+        <label class="input-label">
+                Gate 5
+        </label>
+        <input id="speakvalue5" class="input">
+           <label class="input-label">
+                Gate 6
+        </label>
+        <input id="speakvalue6" class="input">
+           <label class="input-label">
+                Gate 7
+        </label>
+        <input id="speakvalue7" class="input">
+           <label class="input-label">
+                Gate 8
+        </label>
+        <input id="speakvalue8" class="input">
+      </div>
+      <!-- <div class="sidebar-item">
+          </div> -->
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      
+
+      <section class="chart-card">
+  <div class="chart-header">
+    <h2 class="chart-title" style="margin-bottom: 0;">Motion Gates (Realtime + Threshold)</h2>
+    <select id="motionChartType" class="chart-type-select">
+       <option value="">Chart Type</option>
+      <option value="line">Line Chart</option>
+      <option value="bar">Bar Chart</option>
+    </select>
+     
+  </div>
+  <div>
+        <button id="resetmaxvaluemotion" class="button">
+       Reset Max value
+    </button>
+  </div>
+  <canvas id="configuremotionChart"></canvas>
+</section>
+
+<section class="chart-card">
+  <div class="chart-header">
+    <h2 class="chart-title" style="margin-bottom: 0;">Static Gates (Realtime + Threshold)</h2>
+    <select id="staticChartType" class="chart-type-select">
+      <option value="">Chart Type</option>
+      <option value="line">Line Chart</option>
+      <option value="bar">Bar Chart</option>
+    </select>
+  </div>
+  <div>
+        <button id="resetmaxvaluestatic" class="button">
+       Reset Max value
+    </button>
+  </div>
+  <canvas id="configurestaticChart"></canvas>
+</section>
+
+        <section class="chart-card">
+        <h2 class="chart-title">Detection Distance</h2>
+        <div class="chart-controls">
+  <button id="resetZoomBtn" class="button">Reset Zoom</button>
+</div>
+
+        <canvas id="configuredetectionChart"></canvas>
+      </section>
+
+    </main>
+  </div>
+
+</body>
+</html>
