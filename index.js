@@ -1,3 +1,4 @@
+
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
@@ -8,6 +9,21 @@ import autoconfig from "./autoconfig.js";
 import setSensitivity from "./setsensitivity.js";
 import set_sensitivity_cmd from "./setsensitivity-cmd.js";
 import { createPayloadBuffer } from "./check-absence.js";
+//import sql from "./db.js";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // ------------------ EXPRESS SERVER ------------------
@@ -32,7 +48,7 @@ export const port = new SerialPort({
          () => StaticSensitivity
        )
 
-let lastEmit = 0;
+   let lastEmit = 0;
 
    let maxmotionvalues = [0, 0, 0, 0, 0, 0, 0, 0,0];
       let maxstaticvalues = [0, 0, 0, 0, 0, 0, 0, 0,0];

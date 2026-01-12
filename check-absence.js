@@ -1,7 +1,7 @@
 import { stat } from "fs";
 import { occupancy } from "./occupancy.js";
 import { createOccupancyDetector } from "./occupancy-detector.js";
-
+import { insertStatus } from './db/status.repo.js';
 
  
  export function createPayloadBuffer(getMotionThreshold,
@@ -14,7 +14,7 @@ import { createOccupancyDetector } from "./occupancy-detector.js";
 
 
 
-  setInterval(() => {
+  setInterval(async () => {
     if (buffer.length === 0) return;
 
     const GATE_COUNT = 9;
@@ -52,8 +52,10 @@ import { createOccupancyDetector } from "./occupancy-detector.js";
 
     console.log("OCCUPIED:", occupied);
 
-   
-    
+    let state = occupied;
+    await insertStatus(
+      state ? 'PRESENCE' : 'ABSENCE'
+    );
 
     
    // console.log(occupancy(m_avg,s_avg,motion_thres,static_thres));
