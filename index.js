@@ -12,24 +12,10 @@ import { createPayloadBuffer } from "./check-absence.js";
 //import sql from "./db.js";
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ------------------ EXPRESS SERVER ------------------
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+export const io = new Server(server);
 
 app.use(express.static("public")); // serve HTML from /public
 
@@ -86,27 +72,9 @@ const calculateResult = () => {
       const newsensitivity_data = autoconfig(dataArray,MotionSensitivity,StaticSensitivity);
       setSensitivity({newsensitivity_data, MotionSensitivity,StaticSensitivity});
 
-     
-   //   console.log("Auto config");
-    //  console.log("motiongatecount", motiongatecount); 
-   //   console.log("staticgatecount", staticgatecount);
-    //   console.log("NewMotionSensitivity", newMotionSensitivity);
-     //  console.log("NewMotionSensitivity", newStaticSensitivity);
-
-
 };
 
-// const sensitivity_values = (data) => {
 
-// let SET_SENSITIVITY_CMD = "FD FC FB FA 14 00 64 00 00 00 03 00 00 00 01 00 28 00 00 00 02 00 28 00 00 00 04 03 02 01";     
-// console.log(SET_SENSITIVITY_CMD[30]);
-// console.log(SET_SENSITIVITY_CMD[2]);
-
-//     //  switch(data.gate){
-//     //   case "static" : 
-//     //  }
-     
-// };
 
 
 export function hexStringToBuffer(hexString) {
@@ -262,21 +230,10 @@ port.on("data", (data) => {
         Output: parseInt(hexFrame[38], 16)
       };
 
-    //  console.log(MotionSensitivity,StaticSensitivity);
-      // checking for presence and absence.
-
-      
+     
       onpayload(payload);
    
-      
-      
-  
-     
-
-
-      
-
-    // console.log(payload.Output);
+ 
        if(config ){
        
         const dataset = {
@@ -380,6 +337,8 @@ port.on("close", () => {
 // ------------------ SOCKET.IO ------------------
 io.on("connection", (socket) => {
   console.log("🌐 Browser Connected");
+    console.log(socket.id);
+    socket.emit("socketID", socket.id);
 
   socket.on("sendCommand", (hexCommand) => {
     const buffer = hexStringToBuffer(hexCommand);

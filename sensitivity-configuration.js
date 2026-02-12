@@ -27,6 +27,8 @@ export const execute_commands = (commandArray) => {
       );
     });
 
+    
+
     } else {
       console.warn("⚠ Serial port not open. Command not sent. Failed to SET the Sensitivity");
     }
