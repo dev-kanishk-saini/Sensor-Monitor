@@ -25,7 +25,7 @@ server.listen(3000, () => {
 
 // ------------------ SERIAL PORT ------------------
 export const port = new SerialPort({
-  path: "COM12",
+  path: " /dev/ttyUSB0",
   baudRate: 256000
 });
 
