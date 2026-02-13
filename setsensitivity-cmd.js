@@ -2,6 +2,7 @@ import { execute_commands } from "./sensitivity-configuration.js";
 import { hexStringToBuffer, port } from "./index.js";
 import {CONFIG_CMD_ENB} from "./index.js";
 import { CONFIG_CMD_DIS} from "./index.js";
+import { initCommand } from "./index.js";
 
 export const splitHexBytes = (n) =>    Number(n).toString(16).toUpperCase().padStart(4, '0').match(/.{2}/g) ;
 
@@ -54,6 +55,19 @@ const  set_sensitivity_cmd = (data_object) => {
                    `Set the sensitivity of the gate ${gate} at motion : ${motion_value} and static : ${static_value}`
                 );
               });
+
+              setTimeout(() => {
+                  port.write(initCommand, (err) => {
+                      if (err) {
+                        console.error("❌ Serial Write Error:", err.message);
+                        return;
+                      }
+              
+                      console.log("📤 Sent:", initCommand.toString("hex").toUpperCase());
+                    });
+                }, 100);
+              
+
           
               port.write(CONFIG_CMD_DIS, () => {
                 console.log(

@@ -56,6 +56,8 @@ import { insertStatus } from './db/status.repo.js';
     await insertStatus(
       state ? 'PRESENCE' : 'ABSENCE'
     );
+    // console.log("INSERTING:", state ? 'PRESENCE' : 'ABSENCE');
+
 
     
    // console.log(occupancy(m_avg,s_avg,motion_thres,static_thres));

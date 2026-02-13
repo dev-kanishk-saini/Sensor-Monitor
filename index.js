@@ -9,6 +9,7 @@ import autoconfig from "./autoconfig.js";
 import setSensitivity from "./setsensitivity.js";
 import set_sensitivity_cmd from "./setsensitivity-cmd.js";
 import { createPayloadBuffer } from "./check-absence.js";
+import path from "path";
 //import sql from "./db.js";
 
 
@@ -25,7 +26,8 @@ server.listen(3000, () => {
 
 // ------------------ SERIAL PORT ------------------
 export const port = new SerialPort({
-  path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
+  // path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
+  path : "COM12",
   baudRate: 256000
 });
 
@@ -59,6 +61,19 @@ port.on("open", () => {
       );
     });
   }, 100);
+
+
+  setTimeout(() => {
+    port.write(initCommand, (err) => {
+        if (err) {
+          console.error("❌ Serial Write Error:", err.message);
+          return;
+        }
+
+        console.log("📤 Sent:", initCommand.toString("hex").toUpperCase());
+      });
+  }, 100);
+
 
   setTimeout(() => {
     port.write(CONFIG_CMD_DIS, () => {
@@ -96,6 +111,49 @@ connect();
       let motiongatecount = [0,0,0,0,0,0,0,0,0];
       let staticgatecount = [0,0,0,0,0,0,0,0,0];
       let config = false;
+
+
+
+/**
+ * Updates sensitivities and emits change event if values actually changed
+ */
+function updateSensitivities(newMotion, newStatic) {
+  const motionChanged =
+    JSON.stringify(MotionSensitivity) !== JSON.stringify(newMotion);
+
+  const staticChanged =
+    JSON.stringify(StaticSensitivity) !== JSON.stringify(newStatic);
+
+  if (!motionChanged && !staticChanged) return;
+
+  MotionSensitivity = [...newMotion];
+  StaticSensitivity = [...newStatic];
+
+  console.log("🔄 Sensitivities Updated");
+
+  const data = {
+    MotionSensitivity,
+    StaticSensitivity
+  };
+
+  io.emit("sensitivityUpdated", data);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const calculateResult = () => {
   
@@ -159,6 +217,9 @@ export const AUTO_CONFIG_CMD = hexStringToBuffer(
   "FD FC FB FA 04 00 0B 00 0A 00 04 03 02 01"
 )
 
+export const initCommand = hexStringToBuffer(
+  "FD FC FB FA 02 00 61 00 04 03 02 01"
+);
 
 
 
@@ -175,6 +236,9 @@ let Data = [];
 // ------------------ SENSOR DATA READ ------------------
 port.on("data", (data) => {
   if (!data || data.length === 0) return;
+
+  // console.log("Motion Sensitivity",MotionSensitivity);
+  //   console.log("Static Sensitivity",StaticSensitivity);
 
 
   const hexString = data.toString("hex").toUpperCase();
@@ -303,8 +367,9 @@ if (now - lastEmit > 50) {   // 20 updates/sec
       .slice(23, 32)
       .map(v => parseInt(v, 16));
 
-    MotionSensitivity = motionSensitivity;
-    StaticSensitivity = staticSensitivity;
+    // MotionSensitivity = motionSensitivity;
+    // StaticSensitivity = staticSensitivity;
+    updateSensitivities(motionSensitivity, staticSensitivity);
 
 
     const unmannedDuration =
