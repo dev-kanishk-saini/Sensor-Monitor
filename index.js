@@ -25,9 +25,61 @@ server.listen(3000, () => {
 
 // ------------------ SERIAL PORT ------------------
 export const port = new SerialPort({
-  path: " /dev/ttyUSB0",
+  path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
   baudRate: 256000
 });
+
+
+
+
+function connect() {
+   
+  // port.on("open", () => {
+  //   console.log("✅ Serial connected");
+  // });
+
+    
+port.on("open", () => {
+  console.log("✅ UART Connected");
+
+ setTimeout(() => {
+    port.write(CONFIG_CMD_ENB, () => {
+      console.log(
+        "📤 Sent (Config Mode ON):",
+        CONFIG_CMD_ENB.toString("hex").toUpperCase()
+      );
+    });
+  }, 50);
+
+  setTimeout(() => {
+    port.write(ENGINEERING_CMD, () => {
+      console.log(
+        "📤 Sent (Engineering Mode ON):",
+        ENGINEERING_CMD.toString("hex").toUpperCase()
+      );
+    });
+  }, 100);
+
+  setTimeout(() => {
+    port.write(CONFIG_CMD_DIS, () => {
+      console.log(
+        "📤 Sent (Config Mode OFF):",
+        CONFIG_CMD_DIS.toString("hex").toUpperCase()
+      );
+    });
+  }, 150);
+});
+
+
+
+
+  port.on("error", (err) => {
+    console.log("Retrying in 3 seconds...");
+    setTimeout(connect, 3000);
+  });
+}
+
+connect();
 
  const onpayload = createPayloadBuffer(
          () => MotionSensitivity,
@@ -112,36 +164,11 @@ export const AUTO_CONFIG_CMD = hexStringToBuffer(
 
 
 // ------------------ SERIAL CONNECT ------------------
-port.on("open", () => {
-  console.log("✅ UART Connected");
 
- setTimeout(() => {
-    port.write(CONFIG_CMD_ENB, () => {
-      console.log(
-        "📤 Sent (Config Mode ON):",
-        CONFIG_CMD_ENB.toString("hex").toUpperCase()
-      );
-    });
-  }, 50);
 
-  setTimeout(() => {
-    port.write(ENGINEERING_CMD, () => {
-      console.log(
-        "📤 Sent (Engineering Mode ON):",
-        ENGINEERING_CMD.toString("hex").toUpperCase()
-      );
-    });
-  }, 100);
 
-  setTimeout(() => {
-    port.write(CONFIG_CMD_DIS, () => {
-      console.log(
-        "📤 Sent (Config Mode OFF):",
-        CONFIG_CMD_DIS.toString("hex").toUpperCase()
-      );
-    });
-  }, 150);
-});
+
+
 
 let Data = [];
 
@@ -319,9 +346,11 @@ if (now - lastEmit > 50) {   // 20 updates/sec
 });
 
 
-port.on("error", (err) => {
-  console.error("❌ Serial Port Error:", err.message);
-});
+// port.on("error", (err) => {
+//   console.error("❌ Serial Port Error:", err.message);
+
+
+// });
 
 port.on("close", () => {
   console.error("⚠ Serial Port Closed");
