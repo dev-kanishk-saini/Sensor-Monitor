@@ -20,7 +20,7 @@ export const io = new Server(server);
 
 app.use(express.static("public")); // serve HTML from /public
 
-server.listen(3000, () => {
+server.listen(3000, "0.0.0.0",() => {
   console.log("✅ Web Server running at http://localhost:3000");
 });
 
