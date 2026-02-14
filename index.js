@@ -92,6 +92,14 @@ port.on("open", () => {
     console.log("Retrying in 3 seconds...");
     setTimeout(connect, 3000);
   });
+
+//   port.on("close", () => {
+//   console.error("⚠ Serial Port Closed");
+// });
+  port.on("close", () => {
+    console.log("⚠ Serial closed. Reconnecting...");
+    setTimeout(connect, 3000);
+  });
 }
 
 connect();
@@ -417,9 +425,7 @@ if (now - lastEmit > 50) {   // 20 updates/sec
 
 // });
 
-port.on("close", () => {
-  console.error("⚠ Serial Port Closed");
-});
+
 
 
 
