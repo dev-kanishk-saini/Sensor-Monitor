@@ -9,18 +9,28 @@ const  autoconfig = (DataArray,MotionSensitivity,StaticSensitivity) =>{
     DataArray.forEach(element => {
         const motionarray =  element.data.MotionGateValues;
         motionarray.forEach((v,i) =>{
-            if(v > MotionSensitivity[i]){
-                motion_sum[i] = motion_sum[i] + v;
+            // if(v > MotionSensitivity[i]){
+            //     motion_sum[i] = motion_sum[i] + v;
+            //     motion_total[i] = motion_total[i] + 1;
+            // }
+
+             
+                motion_sum[i] = motion_sum[i] + v + 15;
                 motion_total[i] = motion_total[i] + 1;
-            }
+            
         });
 
         const staticarray =  element.data.StaticGateValues;
         staticarray.forEach((v,i) =>{
-            if(v > StaticSensitivity[i]){
-                static_sum[i] = static_sum[i] + v;
+            // if(v > StaticSensitivity[i]){
+            //     static_sum[i] = static_sum[i] + v;
+            //     static_total[i] = static_total[i] + 1;
+            // }
+
+             
+                static_sum[i] = static_sum[i] + v + 10;
                 static_total[i] = static_total[i] + 1;
-            }
+            
         });
        
     });
