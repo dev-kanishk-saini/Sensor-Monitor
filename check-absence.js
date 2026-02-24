@@ -2,6 +2,7 @@ import { stat } from "fs";
 import { occupancy } from "./occupancy.js";
 import { createOccupancyDetector } from "./occupancy-detector.js";
 import { insertStatus } from './db/status.repo.js';
+import client from "./mqtt.js";
 
  
  export function createPayloadBuffer(getMotionThreshold,
@@ -50,7 +51,16 @@ import { insertStatus } from './db/status.repo.js';
       static_thres
     });
 
+
+    
+
     console.log("OCCUPIED:", occupied);
+
+    if(occupied){
+      client.publish('swaja/office/in', '#*2*29*2*1*#');
+    }else{
+      client.publish('swaja/office/in', '#*2*29*2*0*#');
+    }
 
     let state = occupied;
     await insertStatus(

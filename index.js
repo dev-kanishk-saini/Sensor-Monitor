@@ -10,6 +10,8 @@ import setSensitivity from "./setsensitivity.js";
 import set_sensitivity_cmd from "./setsensitivity-cmd.js";
 import { createPayloadBuffer } from "./check-absence.js";
 import path from "path";
+import client from "./mqtt.js";
+
 //import sql from "./db.js";
 
 
@@ -26,8 +28,8 @@ server.listen(3000, "0.0.0.0",() => {
 
 // ------------------ SERIAL PORT ------------------
 export const port = new SerialPort({
- path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
- //path : "COM12",
+ //path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
+ path : "COM12",
   baudRate: 256000
 });
 
@@ -103,6 +105,7 @@ port.on("open", () => {
 }
 
 connect();
+
 
  const onpayload = createPayloadBuffer(
          () => MotionSensitivity,
