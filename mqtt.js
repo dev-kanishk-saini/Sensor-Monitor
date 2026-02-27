@@ -8,9 +8,13 @@ dotenv.config();
 const options = {
     username: process.env.MQTT_USERNAME,
     password: process.env.MQTT_PASSWORD,
+    reconnectPeriod: 5000,
+    connectTimeout: 10000
 };
     
-       const client = mqtt.connect(brokerUrl, options);
+       const client = mqtt.connect(brokerUrl, options,
+        
+       );
         client.on('connect', () => {
             console.log('Connected to MQTT broker');
         });
