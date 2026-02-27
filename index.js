@@ -540,16 +540,34 @@ io.on("connection", (socket) => {
   });
 
 
-  // socket.on("autoconfig",(time) =>{
-  //  // console.log("Auto config");
-  //   console.log(time);
-  //    config = true;
-  //  setTimeout(()=>{
-  //      config = false
-  //  },time);
-  //    calculateResult();
+  socket.on("autoconfig",() =>{
+   // console.log("Auto config");
+        if (port.isOpen) {
+                port.write(CONFIG_CMD_ENB, () => {
+                console.log(
+                  "📤 Sent (Config Mode ON):",
+                  CONFIG_CMD_ENB.toString("hex").toUpperCase()
+                );
+              });
+         
+               port.write(AUTO_CONFIG_CMD, () => {
+                 console.log(
+                  "📤 Sent (Auto Config Command):",
+                  AUTO_CONFIG_CMD.toString("hex").toUpperCase()
+                );
+              });
+              port.write(CONFIG_CMD_DIS, () => {
+                console.log(
+                  "📤 Sent (Config Mode OFF):",
+                  CONFIG_CMD_DIS.toString("hex").toUpperCase()
+                );
+              });
+          
+              } else {
+                console.warn("⚠ Serial port not open. Command not sent. Failed to SET the Sensitivity");
+              }
 
-  // });
+  });
 
 
   socket.on("disconnect", () => {
