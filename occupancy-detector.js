@@ -1,3 +1,5 @@
+import client from "./mqtt.js";
+
 export function createOccupancyDetector({
   absenceDelayMs = 3000 // absence confirmation delay
 }) {

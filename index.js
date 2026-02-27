@@ -11,6 +11,7 @@ import set_sensitivity_cmd from "./setsensitivity-cmd.js";
 import { createPayloadBuffer } from "./check-absence.js";
 import path from "path";
 import client from "./mqtt.js";
+import { getLatestRealtimeData, insertRealtimeData } from "./db/status.repo.js";
 
 //import sql from "./db.js";
 
@@ -22,14 +23,14 @@ export const io = new Server(server);
 
 app.use(express.static("public")); // serve HTML from /public
 
-server.listen(3000, "0.0.0.0",() => {
-  console.log("✅ Web Server running at http://localhost:3000");
+server.listen(3001, "0.0.0.0",() => {
+  console.log("✅ Web Server running at http://localhost:3001");
 });
 
 // ------------------ SERIAL PORT ------------------
 export const port = new SerialPort({
- //path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
- path : "COM12",
+ path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
+// path : "COM12",
   baudRate: 256000
 });
 
@@ -105,6 +106,7 @@ port.on("open", () => {
 }
 
 connect();
+getLatestRealtimeData()
 
 
  const onpayload = createPayloadBuffer(
@@ -316,8 +318,9 @@ port.on("data", (data) => {
         PhotoSensitiveValue: parseInt(hexFrame[37], 16),
         Output: parseInt(hexFrame[38], 16)
       };
-
-     
+    //  console.log("📡 dATA", payload);
+      insertRealtimeData(payload);
+      
       onpayload(payload);
    
  
