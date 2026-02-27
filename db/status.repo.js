@@ -52,7 +52,7 @@ export async function insertRealtimeData(payload) {
     return false;
   }
 
-  console.log("✅ Realtime data inserted");
+ // console.log("✅ Realtime data inserted");
   return true;
 }
 
