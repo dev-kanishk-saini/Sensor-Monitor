@@ -569,6 +569,14 @@ io.on("connection", (socket) => {
 
   });
 
+  socket.on("getData", () => {
+    console.log("Received Data Request!");
+    getLatestRealtimeData().then((data) => {
+      socket.emit("latestData", data);
+    }).catch((err) => {
+      console.error("❌ Failed to SEND latest data:", err);
+    });
+  });
 
   socket.on("disconnect", () => {
     console.log("❌ Browser Disconnected");

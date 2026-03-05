@@ -57,6 +57,7 @@ export async function insertRealtimeData(payload) {
 }
 
 export async function getLatestRealtimeData() {
+  console.log("Fetching latest realtime data from database...");
   const { data, error } = await supabase
   .rpc('get_realtime_data_by_second', {
     input_timestamp: '2026-02-24 19:19:49'
