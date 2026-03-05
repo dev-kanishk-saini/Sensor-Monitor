@@ -212,7 +212,7 @@ export const CONFIG_CMD_DIS = hexStringToBuffer(
 );
 
 export const AUTO_CONFIG_CMD = hexStringToBuffer(
-  "FD FC FB FA 04 00 0B 00 3C 00 04 03 02 01"
+  "FD FC FB FA 04 00 0B 00 0A 00 04 03 02 01"
 )
 
 export const initCommand = hexStringToBuffer(
