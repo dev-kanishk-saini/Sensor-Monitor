@@ -31,8 +31,8 @@ server.listen(3001, "0.0.0.0",() => {
 
 // ------------------ SERIAL PORT ------------------
 export const port = new SerialPort({
-// path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
-path : "COM12",
+ path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
+//path : "COM12",
   baudRate: 256000
 });
 
