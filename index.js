@@ -12,6 +12,8 @@ import { createPayloadBuffer } from "./check-absence.js";
 import path from "path";
 import client from "./mqtt.js";
 import { getLatestRealtimeData, insertRealtimeData } from "./db/status.repo.js";
+import CollectAutoConfigData from "./collectAutoConfigData.js";
+import {storeAutoConfigData} from "./db/status.repo.js";
 
 //import sql from "./db.js";
 
@@ -29,8 +31,8 @@ server.listen(3001, "0.0.0.0",() => {
 
 // ------------------ SERIAL PORT ------------------
 export const port = new SerialPort({
- path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
-//path : "COM12",
+// path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
+path : "COM12",
   baudRate: 256000
 });
 
@@ -86,6 +88,9 @@ port.on("open", () => {
       );
     });
   }, 150);
+
+  startAutoConfigScheduler();
+
 });
 
 
@@ -106,6 +111,8 @@ port.on("open", () => {
 }
 
 connect();
+
+
 getLatestRealtimeData()
 
 
@@ -124,6 +131,9 @@ getLatestRealtimeData()
       let motiongatecount = [0,0,0,0,0,0,0,0,0];
       let staticgatecount = [0,0,0,0,0,0,0,0,0];
       let config = false;
+      let isAutoConfig = false;
+      let  AutoConfigData = [];
+      let autoConfigRunning = false;
 
 
 
@@ -212,7 +222,7 @@ export const CONFIG_CMD_DIS = hexStringToBuffer(
 );
 
 export const AUTO_CONFIG_CMD = hexStringToBuffer(
-  "FD FC FB FA 04 00 0B 00 0A 00 04 03 02 01"
+  "FD FC FB FA 04 00 0B 00 3C 00 04 03 02 01"
 )
 
 export const initCommand = hexStringToBuffer(
@@ -324,7 +334,7 @@ port.on("data", (data) => {
       onpayload(payload);
    
  
-       if(config ){
+       if(config){
        
         const dataset = {
           data : payload,
@@ -333,6 +343,11 @@ port.on("data", (data) => {
          
         dataArray.push (dataset);
         console.log(dataset)
+      }
+
+      if(isAutoConfig){
+         
+          AutoConfigData.push(payload);
       }
  
 
@@ -416,6 +431,93 @@ if (now - lastEmit > 50) {   // 20 updates/sec
 
 // });
 
+function startAutoConfigScheduler() {
+
+  console.log("⏱ AutoConfig scheduler started (every 1 hour)");
+
+  // run first time after 1 minute (optional)
+  setTimeout(() => {
+    runAutoConfig();
+  }, 60000);
+
+  // run every 1 hour
+  setInterval(() => {
+    runAutoConfig();
+  }, 60 * 60 * 1000);
+
+}
+
+
+
+
+async function runAutoConfig() {
+
+  if (autoConfigRunning) {
+    console.log("⚠ AutoConfig already running. Skipping.");
+    return;
+  }
+
+  if (!port.isOpen) {
+    console.warn("⚠ Serial port not open. AutoConfig skipped.");
+    return;
+  }
+
+  autoConfigRunning = true;
+
+  try {
+
+    port.write(CONFIG_CMD_ENB);
+    console.log("📤 Sent (Config Mode ON)");
+
+    isAutoConfig = true;
+    AutoConfigData = [];
+
+    console.log("⚙ AUTO CONFIG started !!!!!");
+
+    port.write(AUTO_CONFIG_CMD);
+    console.log("📤 Sent (Auto Config Command)");
+
+    setTimeout(async () => {
+
+      try {
+
+        isAutoConfig = false;
+
+        if (port.isOpen) {
+          port.write(CONFIG_CMD_ENB);
+          port.write(initCommand);
+          port.write(CONFIG_CMD_DIS);
+        }
+
+        const collectedData = CollectAutoConfigData(
+          AutoConfigData,
+          MotionSensitivity,
+          StaticSensitivity
+        );
+
+        await storeAutoConfigData(collectedData);
+
+        console.log("✅ AUTO CONFIG DONE !!!!!");
+
+      } catch (err) {
+        console.error("❌ AutoConfig processing failed:", err);
+      } finally {
+
+        autoConfigRunning = false;
+
+      }
+
+    }, 60000);
+
+    port.write(CONFIG_CMD_DIS);
+
+  } catch (err) {
+
+    autoConfigRunning = false;
+    console.error("❌ AutoConfig failed:", err);
+
+  }
+}
 
 
 
@@ -510,6 +612,11 @@ io.on("connection", (socket) => {
    maxstaticvalues = [0, 0, 0, 0, 0, 0, 0, 0,0];
   });
 
+
+
+//Function for starting and stopping the Customized Calibration.
+
+
   socket.on("task : control" , ({action}) => {
 
     if(action === "start"){
@@ -527,7 +634,10 @@ io.on("connection", (socket) => {
      
   });
 
- 
+ //Function for setting  sensitivity manually..
+
+
+
   socket.on("setsensitivity",(data)=>{
             const data_object = {
               data : data,
@@ -539,35 +649,94 @@ io.on("connection", (socket) => {
     ``    
   });
 
+  //Function for running AutoConfig Calibration.
 
-  socket.on("autoconfig",() =>{
-   // console.log("Auto config");
-        if (port.isOpen) {
-                port.write(CONFIG_CMD_ENB, () => {
-                console.log(
-                  "📤 Sent (Config Mode ON):",
-                  CONFIG_CMD_ENB.toString("hex").toUpperCase()
-                );
-              });
-         
-               port.write(AUTO_CONFIG_CMD, () => {
-                 console.log(
-                  "📤 Sent (Auto Config Command):",
-                  AUTO_CONFIG_CMD.toString("hex").toUpperCase()
-                );
-              });
-              port.write(CONFIG_CMD_DIS, () => {
-                console.log(
-                  "📤 Sent (Config Mode OFF):",
-                  CONFIG_CMD_DIS.toString("hex").toUpperCase()
-                );
-              });
+  socket.on("autoconfig", async () => {
+  await runAutoConfig();
+});
+
+
+  // socket.on("autoconfig",() =>{
+  //  // console.log("Auto config");
+  //       if (port.isOpen) {
+  //               port.write(CONFIG_CMD_ENB, () => {
+  //               console.log(
+  //                 "📤 Sent (Config Mode ON):",
+  //                 CONFIG_CMD_ENB.toString("hex").toUpperCase()
+  //               );
+  //             });
+
+  //               isAutoConfig = true;
+                
+  //                                console.log("AUTO CONFIG started !!!!!");
+
+  //              port.write(AUTO_CONFIG_CMD, () => {
+  //                console.log(
+  //                 "📤 Sent (Auto Config Command):",
+  //                 AUTO_CONFIG_CMD.toString("hex").toUpperCase()
+  //               );
+  //             });
+      
+  //             setTimeout(async() => {
+  //                    isAutoConfig = false;
+
+                    
+  //                     if (port.isOpen) {
+  //               port.write(CONFIG_CMD_ENB, () => {
+  //               console.log(
+  //                 "📤 Sent (Config Mode ON):",
+  //                 CONFIG_CMD_ENB.toString("hex").toUpperCase()
+  //               );
+  //             });
+
+                
+                
+
+  //              port.write(initCommand, () => {
+  //                console.log(
+  //                 "📤 Sent (Init Command):",
+  //                 initCommand.toString("hex").toUpperCase()
+  //               );
+  //             });
+      
+             
+
+  //             port.write(CONFIG_CMD_DIS, () => {
+  //               console.log(
+  //                 "📤 Sent (Config Mode OFF):",
+  //                 CONFIG_CMD_DIS.toString("hex").toUpperCase()
+  //               );
+  //             });
           
-              } else {
-                console.warn("⚠ Serial port not open. Command not sent. Failed to SET the Sensitivity");
-              }
+  //             } else {
+  //               console.warn("⚠ Serial port not open. Command not sent. Failed to SET the Sensitivity");
+  //             }
 
-  });
+
+
+  //                 const collectedData =  CollectAutoConfigData(AutoConfigData,MotionSensitivity, StaticSensitivity);
+  //                 await storeAutoConfigData(collectedData);
+  //                 console.log("AUTO CONFIG dONE !!!!!");
+
+
+
+
+
+                    
+  //               }, 60000);
+
+  //             port.write(CONFIG_CMD_DIS, () => {
+  //               console.log(
+  //                 "📤 Sent (Config Mode OFF):",
+  //                 CONFIG_CMD_DIS.toString("hex").toUpperCase()
+  //               );
+  //             });
+          
+  //             } else {
+  //               console.warn("⚠ Serial port not open. Command not sent. Failed to SET the Sensitivity");
+  //             }
+
+  // });
 
   socket.on("getData", () => {
     console.log("Received Data Request!");

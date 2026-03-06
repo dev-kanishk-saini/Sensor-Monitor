@@ -70,3 +70,31 @@ if (error) {
   return data;
 }
 }
+
+
+export async function storeAutoConfigData(collectedData) {
+  try {
+    const { data, error } = await supabase
+      .from("autoconfigdata")
+      .insert([
+        {
+          motionmax: collectedData.motionMax,
+          staticmax: collectedData.staticMax,
+          motionsensitivity: collectedData.MotionSensitivity,
+          staticsensitivity: collectedData.StaticSensitivity
+        }
+      ]);
+
+    if (error) {
+      console.error("❌ Supabase insert failed:", error);
+      return { success: false, error };
+    }
+
+    console.log("✅ AutoConfig data stored:", data);
+    return { success: true, data };
+
+  } catch (err) {
+    console.error("❌ Unexpected database error:", err);
+    return { success: false, error: err };
+  }
+}
