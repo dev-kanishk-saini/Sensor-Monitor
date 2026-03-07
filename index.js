@@ -480,7 +480,8 @@ async function runAutoConfig() {
     port.write(CONFIG_CMD_DIS);
 
     setTimeout(()=>{
-         
+         maxmotionvalues = [0, 0, 0, 0, 0, 0, 0, 0,0];
+         maxstaticvalues = [0, 0, 0, 0, 0, 0, 0, 0,0]
         isAutoConfig = false;
     }, 300000);
 
