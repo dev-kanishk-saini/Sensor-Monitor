@@ -31,8 +31,8 @@ server.listen(3001, "0.0.0.0",() => {
 
 // ------------------ SERIAL PORT ------------------
 export const port = new SerialPort({
-// path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
-path : "COM12",
+ path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
+//path : "COM12",
   baudRate: 256000
 });
 
@@ -222,7 +222,7 @@ export const CONFIG_CMD_DIS = hexStringToBuffer(
 );
 
 export const AUTO_CONFIG_CMD = hexStringToBuffer(
-  "FD FC FB FA 04 00 0B 00 0A 00 04 03 02 01"
+  "FD FC FB FA 04 00 0B 00 2C 01 04 03 02 01"
 )
 
 export const initCommand = hexStringToBuffer(
@@ -381,8 +381,8 @@ if (now - lastEmit > 50) {   // 20 updates/sec
       .slice(23, 32)
       .map(v => parseInt(v, 16));
 
-    // MotionSensitivity = motionSensitivity;
-    // StaticSensitivity = staticSensitivity;
+     //MotionSensitivity = motionSensitivity;
+     //StaticSensitivity = staticSensitivity;
     updateSensitivities(motionSensitivity, staticSensitivity);
 
 
@@ -436,14 +436,14 @@ function startAutoConfigScheduler() {
   console.log("⏱ AutoConfig scheduler started (every 1 hour)");
 
   // run first time after 1 minute (optional)
-  setTimeout(() => {
-    runAutoConfig();
-  }, 30000);
+  // setTimeout(() => {
+  //   runAutoConfig();
+  // }, 30000);
 
   // run every 1 hour
   setInterval(() => {
     runAutoConfig();
-  }, 60000);
+  }, 1000*60*20);
 
 }
 
@@ -469,19 +469,25 @@ async function runAutoConfig() {
     port.write(CONFIG_CMD_ENB);
     console.log("📤 Sent (Config Mode ON)");
 
-    isAutoConfig = true;
     AutoConfigData = [];
+    isAutoConfig = true;
 
     console.log("⚙ AUTO CONFIG started !!!!!");
 
     port.write(AUTO_CONFIG_CMD);
     console.log("📤 Sent (Auto Config Command)");
 
+    port.write(CONFIG_CMD_DIS);
+
+    setTimeout(()=>{
+         
+        isAutoConfig = false;
+    }, 300000);
+
     setTimeout(async () => {
 
       try {
 
-        isAutoConfig = false;
 
         if (port.isOpen) {
           port.write(CONFIG_CMD_ENB);
@@ -507,9 +513,9 @@ async function runAutoConfig() {
 
       }
 
-    }, 60000);
+    }, 305000);
 
-    port.write(CONFIG_CMD_DIS);
+    
 
   } catch (err) {
 
