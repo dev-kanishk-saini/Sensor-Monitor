@@ -3,7 +3,7 @@ export default function CollectAutoConfigData(dataArray , MotionSensitivity , St
   const staticMax = [];
 
   //console.log(dataArray);
-  console.log(dataArray);
+ // console.log(dataArray);
 
   dataArray.forEach(item => {
     const motion = item.maxmotionvalues || [];

@@ -134,6 +134,7 @@ getLatestRealtimeData()
       let isAutoConfig = false;
       let  AutoConfigData = [];
       let autoConfigRunning = false;
+      let isAutoConfigDone = false;
 
 
 
@@ -225,11 +226,19 @@ export const AUTO_CONFIG_CMD = hexStringToBuffer(
   "FD FC FB FA 04 00 0B 00 2C 01 04 03 02 01"
 )
 
+
+// export const AUTO_CONFIG_CMD = hexStringToBuffer(
+//   "FD FC FB FA 04 00 0B 00 0A 00 04 03 02 01"
+// )
+
 export const initCommand = hexStringToBuffer(
   "FD FC FB FA 02 00 61 00 04 03 02 01"
 );
 
 
+export const QUERY_AC_EXE_CMD = hexStringToBuffer(
+  "FD FC FB FA 02 00 1B 00 04 03 02 01"
+);
 
 
 // ------------------ SERIAL CONNECT ------------------
@@ -252,6 +261,9 @@ port.on("data", (data) => {
   const hexString = data.toString("hex").toUpperCase();
   const formatted = hexString.match(/.{1,2}/g)?.map((v) => `${v}`);
   //console.log("🔵 Raw Data:", formatted);
+  if( formatted.length < 45){
+    console.log(formatted);
+  }
 
   // ✅ SAFETY CHECK (THIS FIXES YOUR CRASH)
   if (!formatted) return;
@@ -269,7 +281,7 @@ port.on("data", (data) => {
         b.toString(16).padStart(2, "0").toUpperCase()
       );
      const commandWord = hexFrame[6];
-
+   //  console.log(commandWord);
     switch (commandWord) {
       case "01": // Live sensor data
           try {
@@ -283,6 +295,7 @@ port.on("data", (data) => {
         case "01": TargetStatus = "Movement Target"; break;
         case "02": TargetStatus = "Stationary Target"; break;
         case "03": TargetStatus = "Movement & Stationary Target"; break;
+        
         default: TargetStatus = "Unknown";
       }
 
@@ -342,7 +355,7 @@ port.on("data", (data) => {
         }
          
         dataArray.push (dataset);
-        console.log(dataset)
+       // console.log(dataset)
       }
 
       if(isAutoConfig){
@@ -366,7 +379,7 @@ if (now - lastEmit > 50) {   // 20 updates/sec
 
       case "61": // Configuration data
     try {
-      console.log("🔷 Config Data Raw:", hexFrame);
+     // console.log("🔷 Config Data Raw:", hexFrame);
     const ackStatus = parseInt(hexFrame[7], 16);
 
     const maxDistanceGateN = parseInt(hexFrame[11], 16);
@@ -410,10 +423,29 @@ if (now - lastEmit > 50) {   // 20 updates/sec
         break; // valid commands, proceed
 
 
+        case "1B": 
+        try {
+             
+              if(hexFrame[7] === "01" && hexFrame[10] === "02"){
+                    const isAutoConfigResponse  = hexFrame[7];
+
+        isAutoConfigDone = isAutoConfigResponse === "01" ? true : false;
+        console.log("Auto Config Response iS received!!!!!!")
+              }
+           
+        } catch (error) {
+          console.error("No response of Auto Config!!!")
+        }
+         
+        break;
+
       default:
         console.warn("⚠ Unknown command word:", commandWord);
+       // console.log(hexFrame);
         continue; // skip invalid packet
     }
+
+
 
 
   }
@@ -443,7 +475,7 @@ function startAutoConfigScheduler() {
   // run every 1 hour
   setInterval(() => {
     runAutoConfig();
-  }, 1000*60*20);
+  }, 30*60*1000);
 
 }
 
@@ -469,10 +501,19 @@ async function runAutoConfig() {
     port.write(CONFIG_CMD_ENB);
     console.log("📤 Sent (Config Mode ON)");
 
-    AutoConfigData = [];
+      setTimeout(()=>{
+        
+      AutoConfigData = [];
+     maxmotionvalues = [0, 0, 0, 0, 0, 0, 0, 0,0];
+     maxstaticvalues = [0, 0, 0, 0, 0, 0, 0, 0,0]
     isAutoConfig = true;
+    }, 10000);
+
+
+    
 
     console.log("⚙ AUTO CONFIG started !!!!!");
+    isAutoConfigDone = false;
 
     port.write(AUTO_CONFIG_CMD);
     console.log("📤 Sent (Auto Config Command)");
@@ -480,22 +521,28 @@ async function runAutoConfig() {
     port.write(CONFIG_CMD_DIS);
 
     setTimeout(()=>{
-         maxmotionvalues = [0, 0, 0, 0, 0, 0, 0, 0,0];
-         maxstaticvalues = [0, 0, 0, 0, 0, 0, 0, 0,0]
+        
         isAutoConfig = false;
-    }, 300000);
+         if (port.isOpen ) {
+          port.write(CONFIG_CMD_ENB);
+          port.write(QUERY_AC_EXE_CMD);
+          port.write(CONFIG_CMD_DIS);
+        }
+    }, 311000);
 
     setTimeout(async () => {
 
       try {
 
-
-        if (port.isOpen) {
+        //  if(isAutoConfigDone){
+             if (port.isOpen ) {
           port.write(CONFIG_CMD_ENB);
-          port.write(initCommand);
+          port.write(initCommand,()=>{
+            console.log("Asked for sensitivity.")
+          });
           port.write(CONFIG_CMD_DIS);
         }
-
+         
         const collectedData = CollectAutoConfigData(
           AutoConfigData,
           MotionSensitivity,
@@ -505,6 +552,10 @@ async function runAutoConfig() {
         await storeAutoConfigData(collectedData);
 
         console.log("✅ AUTO CONFIG DONE !!!!!");
+        //  }else{
+        //   console.log("AutoConfig is not done yet.")
+        //  }
+     
 
       } catch (err) {
         console.error("❌ AutoConfig processing failed:", err);
@@ -514,7 +565,7 @@ async function runAutoConfig() {
 
       }
 
-    }, 305000);
+    }, 315000);
 
     
 
