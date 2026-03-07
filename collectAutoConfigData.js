@@ -8,8 +8,10 @@ export default function CollectAutoConfigData(dataArray , MotionSensitivity , St
   dataArray.forEach(item => {
     const motion = item.maxmotionvalues || [];
     const stat = item.maxstaticvalues || [];
-
+      console.log("Value for Motion",motion);
+      console.log("Value for Static",stat);
     motion.forEach((val, i) => {
+      
       if (!Number.isNaN(val)) {
         motionMax[i] = motionMax[i] === undefined
           ? val

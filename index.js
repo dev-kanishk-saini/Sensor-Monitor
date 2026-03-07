@@ -31,8 +31,8 @@ server.listen(3001, "0.0.0.0",() => {
 
 // ------------------ SERIAL PORT ------------------
 export const port = new SerialPort({
- path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
-//path : "COM12",
+// path: "/dev/ttyUSB0", // adjust for your system (e.g., COM3 on Windows)
+path : "COM12",
   baudRate: 256000
 });
 
@@ -222,7 +222,7 @@ export const CONFIG_CMD_DIS = hexStringToBuffer(
 );
 
 export const AUTO_CONFIG_CMD = hexStringToBuffer(
-  "FD FC FB FA 04 00 0B 00 3C 00 04 03 02 01"
+  "FD FC FB FA 04 00 0B 00 0A 00 04 03 02 01"
 )
 
 export const initCommand = hexStringToBuffer(
@@ -438,12 +438,12 @@ function startAutoConfigScheduler() {
   // run first time after 1 minute (optional)
   setTimeout(() => {
     runAutoConfig();
-  }, 60000);
+  }, 30000);
 
   // run every 1 hour
   setInterval(() => {
     runAutoConfig();
-  }, 60 * 60 * 1000);
+  }, 60000);
 
 }
 
